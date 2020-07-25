@@ -25,6 +25,8 @@ public class ForwardChannel {
      */
     Socket exposeSocket;
 
+    volatile String status;
+
     public ForwardChannel() {
     }
 
@@ -54,6 +56,7 @@ public class ForwardChannel {
             return;
         }
         // 开始初始化
+        status = "ok";
         InputStream clientInputStream = clientSocket.getInputStream();
         OutputStream clientOutputStream = clientSocket.getOutputStream();
         InputStream exposeInputStream = exposeSocket.getInputStream();
@@ -65,6 +68,7 @@ public class ForwardChannel {
                 closeExposeSocket();
             } catch (IOException e) {
                 log.error("转发异常", e);
+                status = "error";
                 close();
             }
         });
@@ -74,7 +78,9 @@ public class ForwardChannel {
                 transfer(clientInputStream, exposeOutputStream);
             } catch (IOException e) {
                 log.error("转发异常", e);
+                status = "error";
             } finally {
+                // clientSocket关闭流时, 说明clientSocket正常结束了,那么整个通道不可用了
                 close();
             }
         });
