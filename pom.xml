@@ -23,5 +23,6 @@
     <modules>
         <module>local_net_expose_server</module>
         <module>local_net_expose_client</module>
+        <module>local_net_expose_test</module>
     </modules>
 </project>
