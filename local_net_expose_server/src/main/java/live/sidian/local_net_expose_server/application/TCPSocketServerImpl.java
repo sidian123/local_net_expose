@@ -5,7 +5,6 @@ import live.sidian.local_net_expose_server.persistence.dao.ExposeRecordDao;
 import live.sidian.local_net_expose_server.persistence.model.ExposeRecord;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.PostConstruct;
@@ -39,11 +38,6 @@ public class TCPSocketServerImpl implements TCPSocketServer {
      * socket连接通道的集合. 穿透记录与通道的映射
      */
     Map<Long, ForwardChannel> channelMap = new HashMap<>();
-
-
-    @Lazy
-    @Resource
-    TCPSocketServerImpl self;
 
     @Resource
     ExposeRecordDao exposeRecordDao;
@@ -101,11 +95,9 @@ public class TCPSocketServerImpl implements TCPSocketServer {
         if ((channel = channelMap.get(exposeRecord.getId())) != null) { // 已存在通道
             channel.setClientSocket(socket);
         } else { // 不存在通道
-            channel = ForwardChannel.builder().clientSocket(socket).build();
+            channel = new ForwardChannel(socket, null);
             channelMap.put(exposeRecord.getId(), channel);
         }
-        // 初始化通道
-        channel.init();
         return true;
     }
 
@@ -150,11 +142,9 @@ public class TCPSocketServerImpl implements TCPSocketServer {
                 if ((channel = channelMap.get(exposeRecord.getId())) != null) { // 已存在通道
                     channel.setExposeSocket(socket);
                 } else { // 不存在通道
-                    channel = ForwardChannel.builder().exposeSocket(socket).build();
+                    channel = new ForwardChannel(null, socket);
                     channelMap.put(exposeRecord.getId(), channel);
                 }
-                // 初始化通道
-                channel.init();
             }
         } catch (IOException e) {
             log.error(e.getMessage(), e);
