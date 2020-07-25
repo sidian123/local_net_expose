@@ -1,0 +1,11 @@
+spring:
+  jpa:
+    hibernate:
+      ddl-auto: update
+  datasource:
+    url: jdbc:mysql://localhost:3306/local_net_expose?serverTimezone=GMT%2B8&charset=utf8
+    username: root
+    password: 123456
+expose:
+  server:
+    client-listen-port: 9111 # 与client建立连接的端口
