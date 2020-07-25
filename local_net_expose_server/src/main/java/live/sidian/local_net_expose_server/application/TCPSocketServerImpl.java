@@ -88,22 +88,23 @@ public class TCPSocketServerImpl implements TCPSocketServer {
      */
     private boolean recordClientSocket(Socket socket) throws IOException {
         // 唯一标识socket
-        int port = socket.getPort(); // 远程端口
         DataInputStream dataInputStream = new DataInputStream(socket.getInputStream());
         long clientId = dataInputStream.readLong(); // 客户端id
+        long clientPort = dataInputStream.readLong(); // 远程端口
         // 找到对应穿透记录
-        ExposeRecord exposeRecord = exposeRecordDao.findByClientIdAndClientPort(clientId, (long) port);
+        ExposeRecord exposeRecord = exposeRecordDao.findByClientIdAndClientPort(clientId, clientPort);
         if (exposeRecord == null) { // 数据库无配置, 即不允许连接
             return false;
         }
-        // 记录
+        // 记录通道信息
         ForwardChannel channel;
         if ((channel = channelMap.get(exposeRecord.getId())) != null) { // 已存在通道
             channel.setClientSocket(socket);
         } else { // 不存在通道
             channel = ForwardChannel.builder().clientSocket(socket).build();
+            channelMap.put(exposeRecord.getId(), channel);
         }
-        // 建立输入输出流联系
+        // 初始化通道
         channel.init();
         return true;
     }
@@ -144,14 +145,15 @@ public class TCPSocketServerImpl implements TCPSocketServer {
             while (true) {
                 // 等待连接
                 Socket socket = serverSocket.accept();
-                // 记录
+                // 记录通道信息
                 ForwardChannel channel;
                 if ((channel = channelMap.get(exposeRecord.getId())) != null) { // 已存在通道
                     channel.setExposeSocket(socket);
                 } else { // 不存在通道
                     channel = ForwardChannel.builder().exposeSocket(socket).build();
+                    channelMap.put(exposeRecord.getId(), channel);
                 }
-                // 建立输入输出流联系
+                // 初始化通道
                 channel.init();
             }
         } catch (IOException e) {

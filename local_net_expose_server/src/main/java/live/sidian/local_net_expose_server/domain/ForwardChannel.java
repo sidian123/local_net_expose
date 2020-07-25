@@ -12,7 +12,8 @@ import java.io.OutputStream;
 import java.net.Socket;
 
 /**
- * 转发通道
+ * 转发通道, 两个socket组成一个数据流通道.
+ * 当其中一个socket关闭时, 另一个也被关闭
  *
  * @author sidian
  * @date 2020/7/25 11:58
@@ -47,9 +48,12 @@ public class ForwardChannel {
      * 初始化连接
      */
     public void init() throws IOException {
-        if (clientSocket == null || exposeSocket == null) {
+        // 参数校验
+        if ((clientSocket == null || clientSocket.isClosed()) ||
+                (exposeSocket == null || exposeSocket.isClosed())) {
             return;
         }
+        // 开始初始化
         InputStream clientInputStream = clientSocket.getInputStream();
         OutputStream clientOutputStream = clientSocket.getOutputStream();
         InputStream exposeInputStream = exposeSocket.getInputStream();
@@ -76,14 +80,17 @@ public class ForwardChannel {
         }
     }
 
+    /**
+     * 关闭通道, 即关闭两端socket连接
+     */
     public synchronized void close() {
         try {
-            clientSocket.close();
+            if (clientSocket != null) clientSocket.close();
         } catch (IOException e) {
             log.error("关闭client socket失败", e);
         }
         try {
-            exposeSocket.close();
+            if (exposeSocket != null) exposeSocket.close();
         } catch (IOException e) {
             log.error("关闭expose socket失败", e);
         }
