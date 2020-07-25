@@ -1,6 +1,5 @@
 package live.sidian.local_net_expose_client;
 
-import cn.hutool.core.thread.ThreadUtil;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
@@ -11,7 +10,6 @@ import org.springframework.web.client.RestTemplate;
 import javax.annotation.Resource;
 import java.io.DataOutputStream;
 import java.io.IOException;
-import java.io.PushbackInputStream;
 import java.net.Socket;
 import java.util.HashMap;
 import java.util.List;
@@ -87,34 +85,8 @@ public class ClientTransferStation {
         if ((channel = channelMap.get(exposeRecord.getId())) != null) {
             channel.setServerSocket(socket);
         } else {
-            channel = new ForwardChannel(socket);
+            channel = new ForwardChannel(socket, exposeRecord.getClientPort());
             channelMap.put(exposeRecord.getId(), channel);
-        }
-        // 等待Server传输数据
-        ForwardChannel finalChannel = channel;
-        ThreadUtil.execute(() -> {
-            try {
-                waitForSererData(socket, finalChannel, exposeRecord.getClientPort());
-            } catch (IOException e) {
-                log.error("数据传输失败", e);
-                try {
-                    socket.close();
-                } catch (IOException ioException) {
-                    log.error("server socket 关闭失败");
-                }
-            }
-        });
-    }
-
-    private void waitForSererData(Socket socket, ForwardChannel channel, Long clientPort) throws IOException {
-        // 检测是否存在数据
-        PushbackInputStream inputStream = new PushbackInputStream(socket.getInputStream());
-        int b = -1;
-        while ((b = inputStream.read()) != -1) { // 有数据
-            inputStream.unread(b);
-            // 建立通道
-            log.info("服务端传输数据");
-            channel.setLocalPort(clientPort);
         }
     }
 

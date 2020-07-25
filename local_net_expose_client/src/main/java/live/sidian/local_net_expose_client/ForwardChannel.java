@@ -6,6 +6,7 @@ import lombok.extern.slf4j.Slf4j;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.io.PushbackInputStream;
 import java.net.Socket;
 
 /**
@@ -29,17 +30,18 @@ public class ForwardChannel {
     public ForwardChannel() {
     }
 
-    public ForwardChannel(Socket serverSocket) throws IOException {
+    public ForwardChannel(Socket serverSocket, Long localPort) {
         this.serverSocket = serverSocket;
-        init();
-    }
-
-    public void setLocalPort(Long localPort) throws IOException {
         this.localPort = localPort;
         init();
     }
 
-    public void setServerSocket(Socket serverSocket) throws IOException {
+    public void setLocalPort(Long localPort) {
+        this.localPort = localPort;
+        init();
+    }
+
+    public void setServerSocket(Socket serverSocket) {
         this.serverSocket = serverSocket;
         init();
     }
@@ -49,17 +51,35 @@ public class ForwardChannel {
     /**
      * 初始化连接
      */
-    public void init() throws IOException {
+    public void init() {
         if (serverSocket == null || serverSocket.isClosed() || localPort == null) {
             return;
         }
         status = "ok";
+        ThreadUtil.execute(() -> {
+            try {
+                _init();
+            } catch (IOException e) {
+                log.info("传输失败", e);
+            }
+        });
+    }
+
+    private void _init() throws IOException {
+        // 等待服务端发起请求
+        PushbackInputStream serverInputStream = new PushbackInputStream(serverSocket.getInputStream());
+        int b = -1;
+        while ((b = serverInputStream.read()) != -1) { // 有数据
+            serverInputStream.unread(b);
+            // 准备建立通道
+            log.info("服务端传输数据, 开始建立通道");
+            break;
+        }
         // 与内网端口建立连接
         Socket localSocket = new Socket("127.0.0.1", Math.toIntExact(localPort));
         // 获取流
         InputStream localInputStream = localSocket.getInputStream();
         OutputStream localOutputStream = localSocket.getOutputStream();
-        InputStream serverInputStream = serverSocket.getInputStream();
         OutputStream serverOutputStream = serverSocket.getOutputStream();
         // serverSocket input => localSocket output
         ThreadUtil.execute(() -> {
@@ -89,13 +109,10 @@ public class ForwardChannel {
 
     private void transfer(InputStream inputStream, OutputStream outputStream) throws IOException {
         byte[] bytes = new byte[1024];
-        int len;
-        do {
-            // 读
-            len = inputStream.read(bytes);
-            // 写
-            outputStream.write(bytes);
-        } while (len != -1);
+        int len = -1;
+        while ((len = inputStream.read(bytes)) != -1) {
+            outputStream.write(bytes, 0, len);
+        }
     }
 
     public synchronized void closeLocalSocket(Socket localSocket) {

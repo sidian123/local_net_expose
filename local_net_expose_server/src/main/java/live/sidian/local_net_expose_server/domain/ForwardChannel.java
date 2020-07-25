@@ -91,13 +91,10 @@ public class ForwardChannel {
 
     private void transfer(InputStream inputStream, OutputStream outputStream) throws IOException {
         byte[] bytes = new byte[1024];
-        int len;
-        do {
-            // 读
-            len = inputStream.read(bytes);
-            // 写
-            outputStream.write(bytes);
-        } while (len != -1);
+        int len = -1;
+        while ((len = inputStream.read(bytes)) != -1) {
+            outputStream.write(bytes, 0, len);
+        }
     }
 
     /**
