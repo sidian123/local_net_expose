@@ -1,10 +1,6 @@
 package live.sidian.local_net_expose_client;
 
 import cn.hutool.core.thread.ThreadUtil;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 
 import java.io.IOException;
@@ -19,27 +15,39 @@ import java.net.Socket;
  * @date 2020/7/25 11:58
  */
 @Slf4j
-@Builder
-@NoArgsConstructor
-@AllArgsConstructor
 public class ForwardChannel {
     /**
      * 局域网内要被转发的端口
      */
-    @Setter
     Long localPort;
 
     /**
      * 与服务器建立的socket
      */
-    @Setter
     Socket serverSocket;
+
+    public ForwardChannel() {
+    }
+
+    public ForwardChannel(Socket serverSocket) throws IOException {
+        this.serverSocket = serverSocket;
+        init();
+    }
+
+    public void setLocalPort(Long localPort) throws IOException {
+        this.localPort = localPort;
+        init();
+    }
+
+    public void setServerSocket(Socket serverSocket) throws IOException {
+        this.serverSocket = serverSocket;
+        init();
+    }
 
     volatile String status;
 
     /**
      * 初始化连接
-     * TODO 需要改, 局域网内socket关闭了, 不应该结束所有socket, serverSocket可复用. 但serverSocket若关闭了, 那都要关闭.
      */
     public void init() throws IOException {
         if (serverSocket == null || serverSocket.isClosed() || localPort == null) {
@@ -58,6 +66,7 @@ public class ForwardChannel {
             try {
                 transfer(serverInputStream, localOutputStream);
                 closeLocalSocket(localSocket);
+                log.info("local socket 正常关闭");
             } catch (IOException e) {
                 log.error("转发失败", e);
                 status = "error";
@@ -69,6 +78,7 @@ public class ForwardChannel {
             try {
                 transfer(localInputStream, serverOutputStream);
                 closeLocalSocket(localSocket);
+                log.info("local socket 正常关闭");
             } catch (IOException e) {
                 log.error("转发失败", e);
                 status = "error";

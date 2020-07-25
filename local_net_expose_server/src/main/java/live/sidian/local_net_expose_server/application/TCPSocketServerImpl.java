@@ -1,5 +1,6 @@
 package live.sidian.local_net_expose_server.application;
 
+import cn.hutool.core.thread.ThreadUtil;
 import live.sidian.local_net_expose_server.domain.ForwardChannel;
 import live.sidian.local_net_expose_server.persistence.dao.ExposeRecordDao;
 import live.sidian.local_net_expose_server.persistence.model.ExposeRecord;
@@ -30,18 +31,13 @@ public class TCPSocketServerImpl implements TCPSocketServer {
     Map<Long, Thread> exposeListenThreadMap = new HashMap<>();
 
     /**
-     * 监听内网连接的线程
-     */
-    Thread clientListenThread;
-
-    /**
      * socket连接通道的集合. 穿透记录与通道的映射
      */
     Map<Long, ForwardChannel> channelMap = new HashMap<>();
 
     @Resource
     ExposeRecordDao exposeRecordDao;
-    @Value("${expose.server.listen-client-port}")
+    @Value("${expose.server.client-listen-port}")
     int clientListenPort;
 
     /**
@@ -50,7 +46,7 @@ public class TCPSocketServerImpl implements TCPSocketServer {
     @PostConstruct
     public void init() {
         // 监听内网客户端连接
-        clientListenThread = new Thread(this::listenClientConnection);
+        ThreadUtil.execute(this::listenClientConnection);
     }
 
     /**
@@ -60,10 +56,12 @@ public class TCPSocketServerImpl implements TCPSocketServer {
         try {
             // 监听
             ServerSocket serverSocket = new ServerSocket(clientListenPort);
+            log.info("监听内网客户端连接, 监听端口:" + clientListenPort);
             // 处理连接
             while (true) {
                 // 等待连接
                 Socket socket = serverSocket.accept();
+                log.info("收到一个连接");
                 // 记录
                 if (!recordClientSocket(socket)) { // 记录失败
                     socket.close();
@@ -85,11 +83,14 @@ public class TCPSocketServerImpl implements TCPSocketServer {
         DataInputStream dataInputStream = new DataInputStream(socket.getInputStream());
         long clientId = dataInputStream.readLong(); // 客户端id
         long clientPort = dataInputStream.readLong(); // 远程端口
+        log.info(String.format("客户端id:%d 内网端口:%d", clientId, clientPort));
         // 找到对应穿透记录
         ExposeRecord exposeRecord = exposeRecordDao.findByClientIdAndClientPort(clientId, clientPort);
         if (exposeRecord == null) { // 数据库无配置, 即不允许连接
             return false;
         }
+        // 激活穿透端口的监听
+        expose(clientId);
         // 记录通道信息
         ForwardChannel channel;
         if ((channel = channelMap.get(exposeRecord.getId())) != null) { // 已存在通道
@@ -102,12 +103,13 @@ public class TCPSocketServerImpl implements TCPSocketServer {
     }
 
     /**
-     * 穿透客户端注册的所有穿透
+     * 为客户端监听穿透的端口
      *
      * @param clientId 客户端ID
      */
     @Override
     public void expose(long clientId) {
+        log.info(String.format("监听客户端%d注册的穿透端口", clientId));
         // 获取客户端所有可用穿透配置
         List<ExposeRecord> exposeRecordList = exposeRecordDao.findAllByClientIdAndStatus(
                 clientId, ExposeRecord.ExposeRecordStatus.enable);
@@ -120,7 +122,9 @@ public class TCPSocketServerImpl implements TCPSocketServer {
         // 初始化暴露端口的监听线程
         for (ExposeRecord exposeRecord : exposeRecordList) {
             // 监听端口
-            exposeListenThreadMap.put(exposeRecord.getId(), new Thread(() -> listen(exposeRecord)));
+            Thread thread = new Thread(() -> listen(exposeRecord));
+            thread.start();
+            exposeListenThreadMap.put(exposeRecord.getId(), thread);
         }
     }
 
@@ -132,11 +136,14 @@ public class TCPSocketServerImpl implements TCPSocketServer {
     void listen(ExposeRecord exposeRecord) {
         try {
             // 监听端口
-            ServerSocket serverSocket = new ServerSocket(Math.toIntExact(exposeRecord.getServerPort()));
+            Long serverPort = exposeRecord.getServerPort();
+            ServerSocket serverSocket = new ServerSocket(Math.toIntExact(serverPort));
+            log.info(String.format("监听端口%d", serverPort));
             // 处理请求
             while (true) {
                 // 等待连接
                 Socket socket = serverSocket.accept();
+                log.info(String.format("穿透端口%d接收到连接", serverPort));
                 // 记录通道信息
                 ForwardChannel channel;
                 if ((channel = channelMap.get(exposeRecord.getId())) != null) { // 已存在通道

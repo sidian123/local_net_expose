@@ -1,5 +1,6 @@
 package live.sidian.local_net_expose_client;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import lombok.Data;
 
 /**
@@ -7,6 +8,7 @@ import lombok.Data;
  * @date 2020/7/25 17:10
  */
 @Data
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class ExposeRecord {
     Long id;
     /**

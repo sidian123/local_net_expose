@@ -1,18 +1,17 @@
 package live.sidian.local_net_expose_client;
 
-import cn.hutool.core.map.MapUtil;
+import cn.hutool.core.thread.ThreadUtil;
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.core.ParameterizedTypeReference;
-import org.springframework.http.HttpEntity;
-import org.springframework.http.HttpMethod;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
-import javax.annotation.PostConstruct;
 import javax.annotation.Resource;
 import java.io.DataOutputStream;
 import java.io.IOException;
+import java.io.PushbackInputStream;
 import java.net.Socket;
 import java.util.HashMap;
 import java.util.List;
@@ -46,19 +45,22 @@ public class ClientTransferStation {
 
     @Resource
     RestTemplate restTemplate;
+    @Resource
+    ObjectMapper objectMapper;
 
-    @PostConstruct
     public void init() {
         // 获取所有穿透记录
-        List<ExposeRecord> exposeRecordList = restTemplate.exchange(
-                urlPrefix + "/expose_record/get",
-                HttpMethod.GET,
-                new HttpEntity<>(MapUtil.builder("clientId", clientId).build()),
-                new ParameterizedTypeReference<List<ExposeRecord>>() {
-                }
-        ).getBody();
+        String res = restTemplate.getForObject(urlPrefix + "/expose_record/get?clientId=" + clientId, String.class);
+        List<ExposeRecord> exposeRecordList = null;
+        try {
+            exposeRecordList = objectMapper.readValue(res, new TypeReference<List<ExposeRecord>>() {
+            });
+        } catch (IOException e) {
+            log.error("不可能出现的错误...", e);
+        }
         assert exposeRecordList != null;
         // 与服务器建立连接
+        log.info("与服务器建立连接");
         for (ExposeRecord exposeRecord : exposeRecordList) {
             try {
                 establish(exposeRecord);
@@ -85,8 +87,34 @@ public class ClientTransferStation {
         if ((channel = channelMap.get(exposeRecord.getId())) != null) {
             channel.setServerSocket(socket);
         } else {
-            channel = ForwardChannel.builder().serverSocket(socket).build();
+            channel = new ForwardChannel(socket);
             channelMap.put(exposeRecord.getId(), channel);
+        }
+        // 等待Server传输数据
+        ForwardChannel finalChannel = channel;
+        ThreadUtil.execute(() -> {
+            try {
+                waitForSererData(socket, finalChannel, exposeRecord.getClientPort());
+            } catch (IOException e) {
+                log.error("数据传输失败", e);
+                try {
+                    socket.close();
+                } catch (IOException ioException) {
+                    log.error("server socket 关闭失败");
+                }
+            }
+        });
+    }
+
+    private void waitForSererData(Socket socket, ForwardChannel channel, Long clientPort) throws IOException {
+        // 检测是否存在数据
+        PushbackInputStream inputStream = new PushbackInputStream(socket.getInputStream());
+        int b = -1;
+        while ((b = inputStream.read()) != -1) { // 有数据
+            inputStream.unread(b);
+            // 建立通道
+            log.info("服务端传输数据");
+            channel.setLocalPort(clientPort);
         }
     }
 

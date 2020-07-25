@@ -56,6 +56,7 @@ public class ForwardChannel {
             return;
         }
         // 开始初始化
+        log.info("开始传输数据");
         status = "ok";
         InputStream clientInputStream = clientSocket.getInputStream();
         OutputStream clientOutputStream = clientSocket.getOutputStream();
@@ -66,6 +67,7 @@ public class ForwardChannel {
             try {
                 transfer(exposeInputStream, clientOutputStream);
                 closeExposeSocket();
+                log.info("expose socket 关闭");
             } catch (IOException e) {
                 log.error("转发异常", e);
                 status = "error";
@@ -76,6 +78,7 @@ public class ForwardChannel {
         ThreadUtil.execute(() -> {
             try {
                 transfer(clientInputStream, exposeOutputStream);
+                log.info("client socket 关闭");
             } catch (IOException e) {
                 log.error("转发异常", e);
                 status = "error";
