@@ -1,0 +1,7 @@
+expose:
+  server:
+    host: localhost
+    port: 9111
+    url-prefix: http://${expose.server.host}:8080/client
+  client:
+    id: 0 # 应用id
