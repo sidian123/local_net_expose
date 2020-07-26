@@ -1,4 +1,4 @@
-package live.sidian.local_net_expose_server.infrastructure;
+package live.sidian.local_net_expose_common.infrastructure;
 
 /**
  * @author sidian

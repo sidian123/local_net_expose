@@ -1,10 +1,10 @@
-package live.sidian.local_net_expose_server.infrastructure;
+package live.sidian.local_net_expose_common.infrastructure;
 
 import java.io.IOException;
 import java.io.OutputStream;
 import java.util.LinkedList;
 
-import static live.sidian.local_net_expose_server.infrastructure.EncoderConstant.CONTROLLER;
+import static live.sidian.local_net_expose_common.infrastructure.EncoderConstant.CONTROLLER;
 
 /**
  * @author sidian

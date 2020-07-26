@@ -1,4 +1,4 @@
-package live.sidian.local_net_expose_client.util;
+package live.sidian.local_net_expose_common.util;
 
 import org.springframework.beans.BeansException;
 import org.springframework.boot.SpringApplication;
