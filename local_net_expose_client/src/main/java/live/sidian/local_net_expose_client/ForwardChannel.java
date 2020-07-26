@@ -8,6 +8,7 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.PushbackInputStream;
 import java.net.Socket;
+import java.net.SocketException;
 
 /**
  * 转发通道, 两个socket组成一个数据流通道.
@@ -50,6 +51,7 @@ public class ForwardChannel {
 
     /**
      * 初始化连接
+     * TODO bug server输入流在两个线程中被读取了
      */
     public void init() {
         if (serverSocket == null || serverSocket.isClosed() || localPort == null) {
@@ -58,25 +60,24 @@ public class ForwardChannel {
         status = "ok";
         ThreadUtil.execute(() -> {
             try {
-                _init();
+                // 等待服务端发起请求
+                PushbackInputStream serverInputStream = new PushbackInputStream(serverSocket.getInputStream());
+                int b = -1;
+                while ((b = serverInputStream.read()) != -1) { // 有数据
+                    serverInputStream.unread(b);
+                    // 准备建立通道
+                    _init(serverInputStream);
+                }
             } catch (IOException e) {
                 log.info("传输失败", e);
             }
         });
     }
 
-    private void _init() throws IOException {
-        // 等待服务端发起请求
-        PushbackInputStream serverInputStream = new PushbackInputStream(serverSocket.getInputStream());
-        int b = -1;
-        while ((b = serverInputStream.read()) != -1) { // 有数据
-            serverInputStream.unread(b);
-            // 准备建立通道
-            log.info("服务端传输数据, 开始建立通道");
-            break;
-        }
+    private void _init(PushbackInputStream serverInputStream) throws IOException {
         // 与内网端口建立连接
         Socket localSocket = new Socket("127.0.0.1", Math.toIntExact(localPort));
+        log.info(String.format("与内网端口建立连接, local socket hashcode:%d closed? %s", localSocket.hashCode(), localSocket.isClosed()));
         // 获取流
         InputStream localInputStream = localSocket.getInputStream();
         OutputStream localOutputStream = localSocket.getOutputStream();
@@ -85,10 +86,10 @@ public class ForwardChannel {
         ThreadUtil.execute(() -> {
             try {
                 transfer(serverInputStream, localOutputStream);
-                closeLocalSocket(localSocket);
-                log.info("local socket 正常关闭");
+                log.info("server socket 正常关闭");
             } catch (IOException e) {
                 log.error("转发失败", e);
+                log.info("local socket closed? " + localSocket.isClosed());
                 status = "error";
                 close();
             }
@@ -97,6 +98,10 @@ public class ForwardChannel {
         ThreadUtil.execute(() -> {
             try {
                 transfer(localInputStream, serverOutputStream);
+                closeLocalSocket(localSocket);
+                log.info("local socket 正常关闭");
+            } catch (SocketException e) {
+                e.printStackTrace();
                 closeLocalSocket(localSocket);
                 log.info("local socket 正常关闭");
             } catch (IOException e) {

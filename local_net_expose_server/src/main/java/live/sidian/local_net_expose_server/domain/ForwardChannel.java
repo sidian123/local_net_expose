@@ -7,6 +7,8 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.Socket;
+import java.net.SocketException;
+import java.util.LinkedList;
 
 /**
  * 转发通道, 两个socket组成一个数据流通道.
@@ -68,6 +70,8 @@ public class ForwardChannel {
                 transfer(exposeInputStream, clientOutputStream);
                 closeExposeSocket();
                 log.info("expose socket 关闭");
+            } catch (SocketException e) {
+                log.info("expose socket 关闭");
             } catch (IOException e) {
                 log.error("转发异常", e);
                 status = "error";
@@ -78,7 +82,13 @@ public class ForwardChannel {
         ThreadUtil.execute(() -> {
             try {
                 transfer(clientInputStream, exposeOutputStream);
-                log.info("client socket 关闭");
+                log.info("client socket 正常关闭");
+            } catch (SocketException e) {
+                if (e.getMessage().equals("Socket closed")) {
+                    log.info("client socket 正常关闭");
+                } else {
+                    log.error("client socket 异常", e);
+                }
             } catch (IOException e) {
                 log.error("转发异常", e);
                 status = "error";
@@ -119,6 +129,18 @@ public class ForwardChannel {
         } catch (IOException e) {
             log.error("关闭expose socket失败", e);
         }
+    }
+
+    @Override
+    public String toString() {
+        LinkedList<String> strings = new LinkedList<>();
+        if (clientSocket != null) {
+            strings.add("client socket closed? " + clientSocket.isClosed());
+        }
+        if (exposeSocket != null) {
+            strings.add("expose socket closed? " + exposeSocket.isClosed());
+        }
+        return String.join("\n", strings);
     }
 }
 

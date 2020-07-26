@@ -1,9 +1,11 @@
 package live.sidian.local_net_expose_server.application;
 
 import cn.hutool.core.thread.ThreadUtil;
+import live.sidian.local_net_expose_server.domain.AppStatus;
 import live.sidian.local_net_expose_server.domain.ForwardChannel;
 import live.sidian.local_net_expose_server.persistence.dao.ExposeRecordDao;
 import live.sidian.local_net_expose_server.persistence.model.ExposeRecord;
+import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -33,6 +35,7 @@ public class TCPSocketServerImpl implements TCPSocketServer {
     /**
      * socket连接通道的集合. 穿透记录与通道的映射
      */
+    @Getter
     Map<Long, ForwardChannel> channelMap = new HashMap<>();
 
     @Resource
@@ -56,6 +59,7 @@ public class TCPSocketServerImpl implements TCPSocketServer {
         try {
             // 监听
             ServerSocket serverSocket = new ServerSocket(clientListenPort);
+            AppStatus.ready();
             log.info("监听内网客户端连接, 监听端口:" + clientListenPort);
             // 处理连接
             while (true) {

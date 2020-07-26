@@ -15,4 +15,6 @@ public interface ExposeRecordDao extends JpaRepository<ExposeRecord, Long> {
     List<ExposeRecord> findAllByClientIdAndStatus(Long clientId, Integer status);
 
     ExposeRecord findByClientIdAndClientPort(Long clientId, Long clientPort);
+
+    ExposeRecord findAllById(Long id);
 }
