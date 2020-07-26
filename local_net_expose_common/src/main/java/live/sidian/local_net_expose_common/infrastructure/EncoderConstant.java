@@ -10,6 +10,9 @@ public interface EncoderConstant {
      */
     byte CONTROLLER = -1;
 
+    /**
+     * 操作具体解析权, 在于使用的类
+     */
     interface OpConstant {
         byte OPEN = 0; // 打开
         byte CLOSE = 1; // 关闭

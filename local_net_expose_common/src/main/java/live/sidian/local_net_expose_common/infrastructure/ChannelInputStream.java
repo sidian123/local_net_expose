@@ -17,6 +17,11 @@ import static live.sidian.local_net_expose_common.infrastructure.EncoderConstant
 public class ChannelInputStream extends InputStream {
     PushbackInputStream in;
 
+    /**
+     * 第一个字节是否为控制字符
+     */
+    private boolean isFirstContr = false;
+
     public ChannelInputStream(InputStream in) {
         this.in = new PushbackInputStream(in, 1024);
     }
@@ -25,10 +30,11 @@ public class ChannelInputStream extends InputStream {
      * 读取流
      *
      * @param b 用于存储数据
-     * @return 读取的字节长度; -1表示读到了文件尾; -2 遇到命令, 接下来的第一个字节为命令操作符
+     * @return 读取的字节长度; -1表示读到了文件尾; -2 遇到命令, 接下来的第一个字节为控制字符
      */
     @Override
     public int read(byte[] b) throws IOException {
+        isFirstContr = false;
         // 读取
         int len = in.read(b);
         // 解析
@@ -46,6 +52,7 @@ public class ChannelInputStream extends InputStream {
                 // 跳过, 因为这里只有控制字符才需要转义.
                 status = 0;
             } else if (status == 1 && b[i] != CONTROLLER) { // 这是个命名操作数
+                isFirstContr = true;
                 // 若控制符前有数据, 则控制符后及控制符本身重新压入流中
                 if (index > 1) { // 有数据
                     // 压入流中
@@ -57,12 +64,13 @@ public class ChannelInputStream extends InputStream {
                     }
                     return index;
                 } else { // 无数据
-                    // 操作数及之后字节入流
-                    in.unread(b, i, len - i);
+                    // 控制字符及之后字节重新入流
+                    in.unread(b, i - 1, len - i + 1);
                     return -2;
                 }
             } else if (i == len - 1) { // 碰到了控制字符, 但是最后一个
-                // 判断接下来是转义还是命令, 因此该字符重入流中
+                isFirstContr = true;
+                // 无法判断接下来是转义还是命令, 因此该字符重入流中
                 in.unread(b[i]);
             } else { // 碰到了控制字符, 不是最后一个
                 resBytes[index++] = b[i];
@@ -78,12 +86,17 @@ public class ChannelInputStream extends InputStream {
 
     @Override
     public int read() throws IOException {
-        return in.read();
+        if (!isFirstContr) { // 第一个字节不是控制字符
+            return in.read();
+        } else {
+            in.read(); // 忽略第一个控制字符
+            return in.read();
+        }
     }
 
     @Override
     public int read(byte[] b, int off, int len) throws IOException {
-        return in.read(ArrayUtil.sub(b, off, len));
+        return read(ArrayUtil.sub(b, off, len));
     }
 
 
