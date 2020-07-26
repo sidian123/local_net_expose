@@ -24,6 +24,15 @@ public class ChannelOutputStream {
     }
 
     /**
+     * 写入命令
+     *
+     * @param op 命令
+     */
+    public void writeOp(byte op) throws IOException {
+        out.write(new byte[]{CONTROLLER, op});
+    }
+
+    /**
      * 转义
      *
      * @param rawBytes 未修改的字节组
