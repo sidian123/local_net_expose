@@ -1,5 +1,7 @@
 package live.sidian.local_net_expose_common.infrastructure;
 
+import lombok.extern.slf4j.Slf4j;
+
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.PushbackInputStream;
@@ -10,7 +12,8 @@ import static live.sidian.local_net_expose_common.infrastructure.EncoderConstant
  * @author sidian
  * @date 2020/7/26 14:36
  */
-public class ChannelInputStream {
+@Slf4j
+public class ChannelInputStream extends InputStream {
     PushbackInputStream in;
 
     public ChannelInputStream(InputStream in) {
@@ -23,6 +26,7 @@ public class ChannelInputStream {
      * @param b 用于存储数据
      * @return 读取的字节长度; -1表示读到了文件尾; -2 遇到命令, 接下来的第一个字节为命令操作符
      */
+    @Override
     public int read(byte[] b) throws IOException {
         // 读取
         int len = in.read(b);
@@ -68,5 +72,51 @@ public class ChannelInputStream {
             b[i] = resBytes[i];
         }
         return index;
+    }
+
+
+    @Deprecated
+    @Override
+    public int read() throws IOException {
+        log.warn("此方法无解析功能");
+        return in.read();
+    }
+
+    @Deprecated
+    @Override
+    public int read(byte[] b, int off, int len) throws IOException {
+        log.warn("此方法无解析功能");
+        return in.read(b, off, len);
+    }
+
+
+    @Override
+    public long skip(long n) throws IOException {
+        return in.skip(n);
+    }
+
+    @Override
+    public int available() throws IOException {
+        return in.available();
+    }
+
+    @Override
+    public void close() throws IOException {
+        in.close();
+    }
+
+    @Override
+    public synchronized void mark(int readlimit) {
+        in.mark(readlimit);
+    }
+
+    @Override
+    public synchronized void reset() throws IOException {
+        in.reset();
+    }
+
+    @Override
+    public boolean markSupported() {
+        return in.markSupported();
     }
 }

@@ -10,7 +10,7 @@
     </parent>
 
     <artifactId>local_net_expose_common</artifactId>
-    <version>0.0.1-SNAPSHOT</version>
+    <version>${revision}</version>
     <name>local_net_expose_common</name>
     <description>Demo project for Spring Boot</description>
 

@@ -1,5 +1,7 @@
 package live.sidian.local_net_expose_common.infrastructure;
 
+import lombok.extern.slf4j.Slf4j;
+
 import java.io.IOException;
 import java.io.OutputStream;
 import java.util.LinkedList;
@@ -10,7 +12,8 @@ import static live.sidian.local_net_expose_common.infrastructure.EncoderConstant
  * @author sidian
  * @date 2020/7/26 14:37
  */
-public class ChannelOutputStream {
+@Slf4j
+public class ChannelOutputStream extends OutputStream {
 
     OutputStream out;
 
@@ -19,10 +22,10 @@ public class ChannelOutputStream {
     }
 
 
+    @Override
     public void write(byte[] b) throws IOException {
         out.write(escape(b));
     }
-
     /**
      * 写入命令
      *
@@ -54,4 +57,30 @@ public class ChannelOutputStream {
         }
         return res;
     }
+
+
+    @Deprecated
+    @Override
+    public void write(int b) throws IOException {
+        log.warn("此方法无转义功能");
+        out.write(b);
+    }
+
+    @Deprecated
+    @Override
+    public void write(byte[] b, int off, int len) throws IOException {
+        log.warn("此方法无转义功能");
+        out.write(b, off, len);
+    }
+
+    @Override
+    public void flush() throws IOException {
+        out.flush();
+    }
+
+    @Override
+    public void close() throws IOException {
+        out.close();
+    }
+
 }
