@@ -65,7 +65,7 @@ public class TCPSocketServerImpl implements TCPSocketServer {
             while (true) {
                 // 等待连接
                 Socket socket = serverSocket.accept();
-                log.info("收到一个连接");
+                log.info("收到来自客户端的一个连接");
                 // 记录
                 if (!recordClientSocket(socket)) { // 记录失败
                     socket.close();

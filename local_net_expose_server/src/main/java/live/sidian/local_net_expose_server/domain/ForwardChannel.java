@@ -1,6 +1,9 @@
 package live.sidian.local_net_expose_server.domain;
 
 import cn.hutool.core.thread.ThreadUtil;
+import cn.hutool.core.util.ArrayUtil;
+import live.sidian.local_net_expose_common.infrastructure.ChannelInputStream;
+import live.sidian.local_net_expose_common.infrastructure.ChannelOutputStream;
 import lombok.extern.slf4j.Slf4j;
 
 import java.io.IOException;
@@ -10,8 +13,12 @@ import java.net.Socket;
 import java.net.SocketException;
 import java.util.LinkedList;
 
+import static live.sidian.local_net_expose_common.infrastructure.EncoderConstant.OpConstant.CLOSE;
+import static live.sidian.local_net_expose_common.infrastructure.EncoderConstant.OpConstant.OPEN;
+
 /**
  * 转发通道, 两个socket组成一个数据流通道.
+ * TODO expose socket关闭了, 但client端的线程还在跑
  *
  * @author sidian
  * @date 2020/7/25 11:58
@@ -63,12 +70,11 @@ public class ForwardChannel {
         // exposeSocket input => clientSocket output
         exposeToClient(exposeSocket.getInputStream(), clientSocket.getOutputStream());
         // clientSocket input => exposeSocket output
-        clientToExpose(clientSocket.getInputStream(), exposeSocket.getOutputStream());
+        clientToExpose(new ChannelInputStream(clientSocket.getInputStream()), exposeSocket.getOutputStream());
     }
 
     /**
      * clientSocket input => exposeSocket output
-     * 一般server与client的连接不会轻易断开
      *
      * @param inputStream  暴露端口的输出流
      * @param outputStream 客户端的输入流
@@ -76,19 +82,29 @@ public class ForwardChannel {
     private void clientToExpose(InputStream inputStream, OutputStream outputStream) {
         ThreadUtil.execute(() -> {
             try {
-                transfer(inputStream, outputStream);
-                log.info("client socket 正常关闭");
+                byte[] bytes = new byte[1024];
+                int len;
+                while (!ArrayUtil.contains(new int[]{-1, -2}, len = inputStream.read(bytes))) {
+                    outputStream.write(bytes, 0, len);
+                }
+                if (len == -2) {
+                    log.info("client请求关闭expose连接");
+                    closeExposeSocket();
+                }
+                if (len == -1) {
+                    log.info("client socket 正常关闭");
+                    close();
+                }
             } catch (SocketException e) {
-                if (e.getMessage().equals("Socket closed")) {
-                    log.info("client socket 正常关闭. e:" + e.getMessage());
-                } else {
-                    log.error("client socket 异常", e);
+                e.printStackTrace();
+                try {
+                    outputStream.close();
+                } catch (IOException ioException) {
+                    ioException.printStackTrace();
                 }
             } catch (IOException e) {
                 log.error("转发异常", e);
                 status = "error";
-            } finally {
-                // clientSocket关闭流时, 说明clientSocket正常结束了,那么整个通道不可用了
                 close();
             }
         });
@@ -102,12 +118,24 @@ public class ForwardChannel {
      */
     private void exposeToClient(InputStream inputStream, OutputStream outputStream) {
         ThreadUtil.execute(() -> {
+            ChannelOutputStream channelOutputStream = new ChannelOutputStream(outputStream);
             try {
-                transfer(inputStream, outputStream);
+                // 要求client建立内网连接
+                channelOutputStream.writeOp(OPEN);
+                // 开始传输数据
+                transfer(inputStream, channelOutputStream);
+                // 要求client关闭内网连接
+                channelOutputStream.writeOp(CLOSE);
                 closeExposeSocket();
                 log.info("expose socket 关闭");
             } catch (SocketException e) {
-                log.info("expose socket 关闭");
+                log.info("expose socket 关闭, e:" + e.getMessage());
+                try {
+                    channelOutputStream.writeOp(CLOSE);
+                } catch (IOException ioException) {
+                    ioException.printStackTrace();
+                }
+                closeExposeSocket();
             } catch (IOException e) {
                 log.error("转发异常", e);
                 status = "error";
