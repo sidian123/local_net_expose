@@ -58,34 +58,29 @@ public class ForwardChannel {
             return;
         }
         // 开始初始化
-        log.info("开始传输数据");
+        log.info("开始建立通道");
         status = "ok";
-        InputStream clientInputStream = clientSocket.getInputStream();
-        OutputStream clientOutputStream = clientSocket.getOutputStream();
-        InputStream exposeInputStream = exposeSocket.getInputStream();
-        OutputStream exposeOutputStream = exposeSocket.getOutputStream();
         // exposeSocket input => clientSocket output
-        ThreadUtil.execute(() -> {
-            try {
-                transfer(exposeInputStream, clientOutputStream);
-                closeExposeSocket();
-                log.info("expose socket 关闭");
-            } catch (SocketException e) {
-                log.info("expose socket 关闭");
-            } catch (IOException e) {
-                log.error("转发异常", e);
-                status = "error";
-                close();
-            }
-        });
+        exposeToClient(exposeSocket.getInputStream(), clientSocket.getOutputStream());
         // clientSocket input => exposeSocket output
+        clientToExpose(clientSocket.getInputStream(), exposeSocket.getOutputStream());
+    }
+
+    /**
+     * clientSocket input => exposeSocket output
+     * 一般server与client的连接不会轻易断开
+     *
+     * @param inputStream  暴露端口的输出流
+     * @param outputStream 客户端的输入流
+     */
+    private void clientToExpose(InputStream inputStream, OutputStream outputStream) {
         ThreadUtil.execute(() -> {
             try {
-                transfer(clientInputStream, exposeOutputStream);
+                transfer(inputStream, outputStream);
                 log.info("client socket 正常关闭");
             } catch (SocketException e) {
                 if (e.getMessage().equals("Socket closed")) {
-                    log.info("client socket 正常关闭");
+                    log.info("client socket 正常关闭. e:" + e.getMessage());
                 } else {
                     log.error("client socket 异常", e);
                 }
@@ -94,6 +89,28 @@ public class ForwardChannel {
                 status = "error";
             } finally {
                 // clientSocket关闭流时, 说明clientSocket正常结束了,那么整个通道不可用了
+                close();
+            }
+        });
+    }
+
+    /**
+     * exposeSocket input => clientSocket output
+     *
+     * @param inputStream  暴露端口的输入流
+     * @param outputStream 客户端的输出流
+     */
+    private void exposeToClient(InputStream inputStream, OutputStream outputStream) {
+        ThreadUtil.execute(() -> {
+            try {
+                transfer(inputStream, outputStream);
+                closeExposeSocket();
+                log.info("expose socket 关闭");
+            } catch (SocketException e) {
+                log.info("expose socket 关闭");
+            } catch (IOException e) {
+                log.error("转发异常", e);
+                status = "error";
                 close();
             }
         });
