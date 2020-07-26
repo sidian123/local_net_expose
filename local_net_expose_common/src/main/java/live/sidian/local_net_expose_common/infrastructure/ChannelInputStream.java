@@ -1,5 +1,6 @@
 package live.sidian.local_net_expose_common.infrastructure;
 
+import cn.hutool.core.util.ArrayUtil;
 import lombok.extern.slf4j.Slf4j;
 
 import java.io.IOException;
@@ -75,18 +76,14 @@ public class ChannelInputStream extends InputStream {
     }
 
 
-    @Deprecated
     @Override
     public int read() throws IOException {
-        log.warn("此方法无解析功能");
         return in.read();
     }
 
-    @Deprecated
     @Override
     public int read(byte[] b, int off, int len) throws IOException {
-        log.warn("此方法无解析功能");
-        return in.read(b, off, len);
+        return in.read(ArrayUtil.sub(b, off, len));
     }
 
 

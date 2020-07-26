@@ -1,5 +1,6 @@
 package live.sidian.local_net_expose_common.infrastructure;
 
+import cn.hutool.core.util.ArrayUtil;
 import lombok.extern.slf4j.Slf4j;
 
 import java.io.IOException;
@@ -41,7 +42,7 @@ public class ChannelOutputStream extends OutputStream {
      * @param rawBytes 未修改的字节组
      * @return 结果字节组
      */
-    public byte[] escape(byte[] rawBytes) {
+    private byte[] escape(byte[] rawBytes) {
         LinkedList<Byte> bytes = new LinkedList<>();
         // 转义
         for (byte rawByte : rawBytes) {
@@ -59,18 +60,18 @@ public class ChannelOutputStream extends OutputStream {
     }
 
 
-    @Deprecated
     @Override
     public void write(int b) throws IOException {
-        log.warn("此方法无转义功能");
-        out.write(b);
+        if (CONTROLLER == b) {
+            write(new byte[]{(byte) b});
+        } else {
+            out.write(b);
+        }
     }
 
-    @Deprecated
     @Override
     public void write(byte[] b, int off, int len) throws IOException {
-        log.warn("此方法无转义功能");
-        out.write(b, off, len);
+        out.write(ArrayUtil.sub(b, off, len));
     }
 
     @Override
