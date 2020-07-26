@@ -14,7 +14,7 @@ public class ChannelInputStream {
     PushbackInputStream in;
 
     public ChannelInputStream(InputStream in) {
-        this.in = new PushbackInputStream(in);
+        this.in = new PushbackInputStream(in, 1024);
     }
 
     /**
@@ -45,7 +45,12 @@ public class ChannelInputStream {
                 if (index > 1) { // 有数据
                     // 压入流中
                     in.unread(b, i - 1, len - i + 1);
-                    len = i + 1 - 2;
+                    // 返回控制符前面的数据
+                    index--;
+                    for (int j = 0; j < index; j++) {
+                        b[j] = resBytes[j];
+                    }
+                    return index;
                 } else { // 无数据
                     // 操作数及之后字节入流
                     in.unread(b, i, len - i);
