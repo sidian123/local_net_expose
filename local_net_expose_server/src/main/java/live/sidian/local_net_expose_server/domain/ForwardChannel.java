@@ -2,6 +2,7 @@ package live.sidian.local_net_expose_server.domain;
 
 import cn.hutool.core.thread.ThreadUtil;
 import cn.hutool.core.util.ArrayUtil;
+import cn.hutool.core.util.StrUtil;
 import live.sidian.local_net_expose_common.infrastructure.ChannelInputStream;
 import live.sidian.local_net_expose_common.infrastructure.ChannelOutputStream;
 import lombok.extern.slf4j.Slf4j;
@@ -86,6 +87,7 @@ public class ForwardChannel {
                 int len;
                 while (!ArrayUtil.contains(new int[]{-1, -2}, len = inputStream.read(bytes))) {
                     outputStream.write(bytes, 0, len);
+                    System.out.println(StrUtil.str(ArrayUtil.sub(bytes, 0, len), "utf-8"));
                 }
                 if (len == -2) {
                     log.info("client请求关闭expose连接");
@@ -129,6 +131,7 @@ public class ForwardChannel {
                 closeExposeSocket();
                 log.info("expose socket 关闭");
             } catch (SocketException e) {
+                e.printStackTrace();
                 log.info("expose socket 关闭, e:" + e.getMessage());
                 try {
                     channelOutputStream.writeOp(CLOSE);
@@ -149,6 +152,7 @@ public class ForwardChannel {
         int len = -1;
         while ((len = inputStream.read(bytes)) != -1) {
             outputStream.write(bytes, 0, len);
+            System.out.println(StrUtil.str(bytes, "utf-8"));
         }
     }
 
