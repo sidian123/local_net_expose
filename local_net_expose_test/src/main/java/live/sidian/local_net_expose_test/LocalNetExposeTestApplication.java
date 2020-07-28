@@ -1,6 +1,8 @@
 package live.sidian.local_net_expose_test;
 
 import cn.hutool.core.thread.ThreadUtil;
+import cn.hutool.core.util.ArrayUtil;
+import cn.hutool.core.util.StrUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.SpringApplication;
@@ -31,37 +33,33 @@ public class LocalNetExposeTestApplication implements CommandLineRunner {
             Socket finalSocket = socket;
             ThreadUtil.execute(() -> {
                 try {
-//                    BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(finalSocket.getInputStream(), "utf-8"));
-//                    String line;
-//                    while((line=bufferedReader.readLine())!=null){
-//                        System.out.println(line);
-//                    }
                     byte[] bytes = new byte[1024];
                     int len = -1;
                     InputStream inputStream = finalSocket.getInputStream();
                     OutputStream outputStream = pythonSocket.getOutputStream();
                     while ((len = inputStream.read(bytes)) != -1) {
                         outputStream.write(bytes, 0, len);
+                        System.out.println(StrUtil.str(ArrayUtil.sub(bytes, 0, len), "utf-8"));
                     }
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
+                log.info("o -> p close");
             });
             ThreadUtil.execute(() -> {
-                log.info("发送响应");
                 try {
-//                    BufferedWriter bufferedWriter = new BufferedWriter(new OutputStreamWriter(finalSocket1.getOutputStream(), "utf-8"));
-//                    bufferedWriter.write(resposne);
                     byte[] bytes = new byte[1024];
                     int len = -1;
                     InputStream inputStream = pythonSocket.getInputStream();
                     OutputStream outputStream = finalSocket.getOutputStream();
                     while ((len = inputStream.read(bytes)) != -1) {
                         outputStream.write(bytes, 0, len);
+                        System.out.println(StrUtil.str(ArrayUtil.sub(bytes, 0, len), "utf-8"));
                     }
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
+                log.info("p -> o close");
             });
         }
     }
