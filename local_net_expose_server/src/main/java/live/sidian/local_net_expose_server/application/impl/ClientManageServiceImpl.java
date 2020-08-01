@@ -3,6 +3,7 @@ package live.sidian.local_net_expose_server.application.impl;
 import cn.hutool.core.bean.BeanUtil;
 import cn.hutool.core.thread.ThreadUtil;
 import live.sidian.local_net_expose_common.infrastructure.Command;
+import live.sidian.local_net_expose_common.util.SocketUtil;
 import live.sidian.local_net_expose_server.application.ClientManageService;
 import live.sidian.local_net_expose_server.domain.AppStatus;
 import live.sidian.local_net_expose_server.domain.ChannelBuilder;
@@ -17,7 +18,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
-import javax.annotation.PostConstruct;
 import javax.annotation.Resource;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
@@ -61,7 +61,6 @@ public class ClientManageServiceImpl implements ClientManageService {
      *
      * @throws IOException 监听失败时抛出
      */
-    @PostConstruct
     @Override
     public void init() throws IOException {
         // 监听端口
@@ -71,9 +70,10 @@ public class ClientManageServiceImpl implements ClientManageService {
         // 等待客户端连接, 与客户端沟通
         ThreadUtil.execute(() -> {
             while (true) {
+                Socket socket = null;
                 try {
                     // 等待连接
-                    Socket socket = serverSocket.accept();
+                    socket = serverSocket.accept();
                     log.info("接收到来自客户端的连接");
                     // 读取客户端命令
                     int command = parseCommand(socket);
@@ -96,8 +96,11 @@ public class ClientManageServiceImpl implements ClientManageService {
                         default: // 其他情况, 忽略
                             socket.close();
                     }
-                } catch (IOException | ClientNotRegister e) {
-                    e.printStackTrace();
+                } catch (IOException e) {
+                    log.error("命令执行过程中异常", e);
+                    SocketUtil.close(socket);
+                } catch (ClientNotRegister e) {
+                    log.error(e.getMessage());
                 }
             }
         });
@@ -116,10 +119,16 @@ public class ClientManageServiceImpl implements ClientManageService {
         }
         if (!channelBuilder.isOutSocketOk()) { // 通道失效
             willBuildChannels.remove(serverPort);
+            socket.close();
             return;
         }
         channelBuilder.setLocalSocket(socket);
-        channelBuilder.build();
+        try {
+            channelBuilder.build();
+        } catch (IOException e) {
+            channelBuilder.close();
+            throw e;
+        }
         willBuildChannels.remove(serverPort);
     }
 
@@ -130,12 +139,18 @@ public class ClientManageServiceImpl implements ClientManageService {
 
     private void listen(ClientDo client) {
         for (ExposeRecord exposeRecord : client.getExposeRecords()) {
+            if (exposeRecord.getStatus().equals(ExposeRecordStatus.disable)) {
+                continue;
+            }
             // 监听
             ThreadUtil.execute(() -> {
                 try {
                     log.info(String.format("暴露客户端%d的%d端口到server的%d端上",
                             client.getId(), exposeRecord.getClientPort(), exposeRecord.getServerPort()));
-                    listen(exposeRecord, client);
+                    // 监听
+                    ServerSocket serverSocket = new ServerSocket(Math.toIntExact(exposeRecord.getServerPort()));
+                    // 处理请求
+                    handleRequest(serverSocket, exposeRecord, client);
                 } catch (IOException e) {
                     log.error("监听客户端失败", e);
                     exposeRecord.setStatus(ExposeRecordStatus.exception);
@@ -144,11 +159,12 @@ public class ClientManageServiceImpl implements ClientManageService {
         }
     }
 
-    private void listen(ExposeRecord exposeRecord, ClientDo client) throws IOException {
-        try (ServerSocket serverSocket = new ServerSocket(Math.toIntExact(exposeRecord.getServerPort()))) {
-            while (true) {
+    private void handleRequest(ServerSocket serverSocket, ExposeRecord exposeRecord, ClientDo client) {
+        while (true) {
+            Socket socket = null;
+            try {
                 // 外网访问
-                Socket socket = serverSocket.accept();
+                socket = serverSocket.accept();
                 log.info(String.format("客户端%d穿透的外网端口%d接收到请求, 即将构建传输隧道, 发送到内网端口%d",
                         client.getId(), exposeRecord.getServerPort(), exposeRecord.getClientPort()));
                 // 要求client构建隧道
@@ -156,6 +172,9 @@ public class ClientManageServiceImpl implements ClientManageService {
                 outputStream.writeInt(Command.BUILD_CHANNEL);
                 outputStream.writeLong(exposeRecord.getServerPort());
                 willBuildChannels.put(exposeRecord.getServerPort(), new ChannelBuilder(socket));
+            } catch (IOException e) {
+                log.error("请求处理失败", e);
+                SocketUtil.close(socket);
             }
         }
     }
@@ -166,7 +185,10 @@ public class ClientManageServiceImpl implements ClientManageService {
         DataInputStream inputStream = new DataInputStream(socket.getInputStream());
         long clientId = inputStream.readLong(); // 客户端id
         Client client = clientDao.findById(clientId).orElse(null);
-        if (client == null) throw new ClientNotRegister(String.format("客户端%d未注册", clientId));
+        if (client == null) {
+            socket.close();
+            throw new ClientNotRegister(String.format("客户端%d未注册", clientId));
+        }
         // TODO 认证
         // 补全对象
         List<ExposeRecord> exposeRecords = exposeRecordDao.findAllByClientId(clientId);

@@ -46,4 +46,8 @@ public class ChannelBuilder {
     public boolean isOutSocketOk() {
         return outSocket != null && !outSocket.isClosed();
     }
+
+    public void close() {
+        channel.close();
+    }
 }

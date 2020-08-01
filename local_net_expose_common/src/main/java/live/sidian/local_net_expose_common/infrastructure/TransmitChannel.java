@@ -3,6 +3,7 @@ package live.sidian.local_net_expose_common.infrastructure;
 import cn.hutool.core.thread.ThreadUtil;
 import cn.hutool.core.util.ArrayUtil;
 import cn.hutool.core.util.StrUtil;
+import live.sidian.local_net_expose_common.util.SocketUtil;
 import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
 
@@ -74,12 +75,8 @@ public class TransmitChannel {
         }
     }
 
-    private void close() {
-        try {
-            socket.close();
-            socket2.close();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+    public void close() {
+        SocketUtil.close(socket);
+        SocketUtil.close(socket2);
     }
 }
