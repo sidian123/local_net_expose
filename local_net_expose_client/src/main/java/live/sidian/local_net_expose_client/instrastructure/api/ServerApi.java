@@ -1,8 +1,9 @@
 package live.sidian.local_net_expose_client.instrastructure.api;
 
-import live.sidian.local_net_expose_client.ExposeRecord;
+import live.sidian.local_net_expose_client.domain.ExposeRecord;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 
 import java.util.List;
@@ -18,5 +19,5 @@ public interface ServerApi {
     String getServerStatus();
 
     @GetMapping("/expose_record/get")
-    List<ExposeRecord> getExposeRecord(long clientId);
+    List<ExposeRecord> getExposeRecord(@RequestParam long clientId);
 }

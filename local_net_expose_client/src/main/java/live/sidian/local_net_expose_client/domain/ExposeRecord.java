@@ -1,4 +1,4 @@
-package live.sidian.local_net_expose_client;
+package live.sidian.local_net_expose_client.domain;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import lombok.Data;
@@ -19,6 +19,10 @@ public class ExposeRecord {
      * client上暴露端口
      */
     Long clientPort;
+    /**
+     * 状态. 0启用, 1禁用
+     */
+    Integer status;
 
     /**
      * 应用id
