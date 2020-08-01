@@ -3,12 +3,12 @@ package live.sidian.local_net_expose_server.application;
 import cn.hutool.core.thread.ThreadUtil;
 import live.sidian.local_net_expose_server.domain.AppStatus;
 import live.sidian.local_net_expose_server.domain.ForwardChannel;
+import live.sidian.local_net_expose_server.infrastructure.ExposeRecordStatus;
 import live.sidian.local_net_expose_server.persistence.dao.ExposeRecordDao;
 import live.sidian.local_net_expose_server.persistence.model.ExposeRecord;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.stereotype.Service;
 
 import javax.annotation.PostConstruct;
 import javax.annotation.Resource;
@@ -25,7 +25,8 @@ import java.util.Map;
  * @date 2020/7/24 22:36
  */
 @Slf4j
-@Service
+//@Service
+@Deprecated
 public class TCPSocketServerImpl implements TCPSocketServer {
     /**
      * 与暴露端口相关的线程. 穿透记录id与监听线程的映射
@@ -116,7 +117,7 @@ public class TCPSocketServerImpl implements TCPSocketServer {
         log.info(String.format("监听客户端%d注册的穿透端口", clientId));
         // 获取客户端所有可用穿透配置
         List<ExposeRecord> exposeRecordList = exposeRecordDao.findAllByClientIdAndStatus(
-                clientId, ExposeRecord.ExposeRecordStatus.enable);
+                clientId, ExposeRecordStatus.enable);
         // 判断是否已注册过了
         boolean present = exposeRecordList.stream()
                 .anyMatch(exposeRecord -> exposeListenThreadMap.get(exposeRecord.getId()) != null);

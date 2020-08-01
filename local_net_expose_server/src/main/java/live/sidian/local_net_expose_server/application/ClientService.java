@@ -1,5 +1,6 @@
 package live.sidian.local_net_expose_server.application;
 
+import live.sidian.local_net_expose_server.infrastructure.ExposeRecordStatus;
 import live.sidian.local_net_expose_server.persistence.dao.ExposeRecordDao;
 import live.sidian.local_net_expose_server.persistence.model.ExposeRecord;
 import org.springframework.stereotype.Service;
@@ -19,6 +20,6 @@ public class ClientService {
     ExposeRecordDao exposeRecordDao;
 
     public List<ExposeRecord> getExposeRecord(long clientId) {
-        return exposeRecordDao.findAllByClientIdAndStatus(clientId, ExposeRecord.ExposeRecordStatus.enable);
+        return exposeRecordDao.findAllByClientIdAndStatus(clientId, ExposeRecordStatus.enable);
     }
 }

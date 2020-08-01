@@ -42,7 +42,7 @@ public class LocalNetExposeClientApplication implements CommandLineRunner {
         // 等待server启动
         waitServerStart();
         // 初始化
-        clientTransferStation.init();
+//        clientTransferStation.init();
         // 没主线程啥事了, 睡觉
         while (true) {
             Thread.sleep(5000);

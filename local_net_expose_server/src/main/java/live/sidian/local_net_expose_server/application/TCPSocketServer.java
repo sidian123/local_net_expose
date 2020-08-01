@@ -4,6 +4,7 @@ package live.sidian.local_net_expose_server.application;
  * @author sidian
  * @date 2020/7/25 10:46
  */
+@Deprecated
 public interface TCPSocketServer {
     /**
      * 穿透客户端注册的所有穿透

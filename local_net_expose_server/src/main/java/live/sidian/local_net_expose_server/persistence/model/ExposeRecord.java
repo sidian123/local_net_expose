@@ -25,7 +25,7 @@ public class ExposeRecord {
     Long id;
 
     /**
-     * server上暴露端口
+     * server上监听端口
      */
     Long serverPort;
     /**
@@ -44,8 +44,4 @@ public class ExposeRecord {
     Long clientId;
 
 
-    public interface ExposeRecordStatus {
-        int enable = 0;
-        int disable = 1;
-    }
 }

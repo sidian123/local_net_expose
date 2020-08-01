@@ -19,7 +19,8 @@ import java.util.List;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class ExposeRecordDo {
+@Deprecated
+public class ExposeRecordDo2 {
     ExposeRecord exposeRecord;
     /**
      * server上监听暴露端口的线程

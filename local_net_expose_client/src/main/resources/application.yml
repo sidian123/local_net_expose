@@ -2,6 +2,7 @@ expose:
   server:
     host: localhost
     port: 9111
-    url-prefix: http://${expose.server.host}:8080/client
+    rest-port: 8080
+    url-prefix: http://${expose.server.host}:${expose.server.rest-port}/client
   client:
     id: 1 # 应用id

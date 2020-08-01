@@ -23,6 +23,7 @@ import java.util.Map;
  */
 @Slf4j
 @Service
+@Deprecated
 public class ClientTransferStation {
     /**
      * socket连接通道的集合. 穿透记录与通道的映射

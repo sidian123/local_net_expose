@@ -23,6 +23,7 @@ import static live.sidian.local_net_expose_common.infrastructure.EncoderConstant
  * @date 2020/7/25 11:58
  */
 @Slf4j
+@Deprecated
 public class ForwardChannel {
     /**
      * 局域网内要被转发的端口
