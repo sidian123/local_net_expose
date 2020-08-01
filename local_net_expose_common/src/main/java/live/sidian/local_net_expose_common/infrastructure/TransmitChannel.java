@@ -47,11 +47,11 @@ public class TransmitChannel {
     }
 
     private void initChannel() throws IOException {
-        doInitChannel(socket.getInputStream(), socket2.getOutputStream());
-        doInitChannel(socket2.getInputStream(), socket.getOutputStream());
+        doInitChannel(socket.getInputStream(), socket2.getOutputStream(), socket2);
+        doInitChannel(socket2.getInputStream(), socket.getOutputStream(), socket);
     }
 
-    private void doInitChannel(InputStream inputStream, OutputStream outputStream) {
+    private void doInitChannel(InputStream inputStream, OutputStream outputStream, Socket socket) {
         ThreadUtil.execute(() -> {
             try {
                 byte[] bytes = new byte[1024];
@@ -62,6 +62,7 @@ public class TransmitChannel {
                         System.out.println(StrUtil.str(ArrayUtil.sub(bytes, 0, len), "utf-8"));
                     }
                 }
+                socket.shutdownOutput(); // EOF读不出来, 需要手动写入
                 exitNum.incrementAndGet();
                 canAndClose();
             } catch (IOException e) {
@@ -82,6 +83,7 @@ public class TransmitChannel {
     }
 
     public void close() {
+//        log.info("一条传输隧道被关闭");
         SocketUtil.close(socket);
         SocketUtil.close(socket2);
     }
