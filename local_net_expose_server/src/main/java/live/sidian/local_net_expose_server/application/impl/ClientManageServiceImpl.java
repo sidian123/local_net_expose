@@ -4,6 +4,7 @@ import cn.hutool.core.bean.BeanUtil;
 import cn.hutool.core.thread.ThreadUtil;
 import live.sidian.local_net_expose_common.infrastructure.Command;
 import live.sidian.local_net_expose_common.util.SocketUtil;
+import live.sidian.local_net_expose_server.AppConfig;
 import live.sidian.local_net_expose_server.application.ClientManageService;
 import live.sidian.local_net_expose_server.domain.AppStatus;
 import live.sidian.local_net_expose_server.domain.ChannelBuilder;
@@ -55,6 +56,8 @@ public class ClientManageServiceImpl implements ClientManageService {
     ExposeRecordDao exposeRecordDao;
     @Resource
     ClientDao clientDao;
+    @Resource
+    AppConfig appConfig;
 
     /**
      * 初始化连接客户端的监听器
@@ -171,7 +174,8 @@ public class ClientManageServiceImpl implements ClientManageService {
                 DataOutputStream outputStream = new DataOutputStream(client.getSocket().getOutputStream());
                 outputStream.writeInt(Command.BUILD_CHANNEL);
                 outputStream.writeLong(exposeRecord.getServerPort());
-                willBuildChannels.put(exposeRecord.getServerPort(), new ChannelBuilder(socket));
+                willBuildChannels.put(exposeRecord.getServerPort(),
+                        new ChannelBuilder(socket).setShowContent(appConfig.isShowContent()));
             } catch (IOException e) {
                 log.error("请求处理失败", e);
                 SocketUtil.close(socket);

@@ -7,5 +7,6 @@ spring:
     username: root
     password: 123456
 expose:
+  show-content: false
   server:
     client-listen-port: 9111 # 与client建立连接的端口

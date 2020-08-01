@@ -1,6 +1,7 @@
 package live.sidian.local_net_expose_client.application.impl;
 
 import cn.hutool.core.thread.ThreadUtil;
+import live.sidian.local_net_expose_client.AppConfig;
 import live.sidian.local_net_expose_client.application.ExposeClient;
 import live.sidian.local_net_expose_client.domain.ExposeRecord;
 import live.sidian.local_net_expose_client.instrastructure.api.ServerApi;
@@ -43,6 +44,8 @@ public class ExposeClientImpl implements ExposeClient {
     long clientId;
     @Resource
     ServerApi serverApi;
+    @Resource
+    AppConfig appConfig;
 
     /**
      * 登入server
@@ -94,5 +97,6 @@ public class ExposeClientImpl implements ExposeClient {
         Socket localSocket = new Socket("localhost", Math.toIntExact(clientPort));
         // 建立隧道
         TransmitChannel transmitChannel = new TransmitChannel(serverSocket, localSocket);
+        transmitChannel.setShowContent(appConfig.isShowContent());
     }
 }

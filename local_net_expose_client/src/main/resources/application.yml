@@ -1,4 +1,5 @@
 expose:
+  show-content: false
   server:
     host: localhost
     port: 9111

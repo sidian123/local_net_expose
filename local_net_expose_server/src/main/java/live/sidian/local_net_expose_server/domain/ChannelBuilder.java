@@ -25,8 +25,15 @@ public class ChannelBuilder {
 
     TransmitChannel channel;
 
+    boolean showContent = false;
+
     public ChannelBuilder(Socket outSocket) {
         this.outSocket = outSocket;
+    }
+
+    public ChannelBuilder setShowContent(boolean showContent) {
+        this.showContent = showContent;
+        return this;
     }
 
 
@@ -37,6 +44,7 @@ public class ChannelBuilder {
         Assert.isTrue(canBuild(),
                 "socket为null或已关闭");
         channel = new TransmitChannel(localSocket, outSocket);
+        channel.setShowContent(showContent);
     }
 
     private boolean canBuild() {

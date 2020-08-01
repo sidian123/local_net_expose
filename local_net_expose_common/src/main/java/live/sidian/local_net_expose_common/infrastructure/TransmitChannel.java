@@ -5,6 +5,7 @@ import cn.hutool.core.util.ArrayUtil;
 import cn.hutool.core.util.StrUtil;
 import live.sidian.local_net_expose_common.util.SocketUtil;
 import lombok.NonNull;
+import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 
 import java.io.IOException;
@@ -24,6 +25,9 @@ import java.util.concurrent.atomic.AtomicLong;
 public class TransmitChannel {
     Socket socket;
     Socket socket2;
+
+    @Setter
+    boolean showContent = false;
 
     /**
      * 由于EOF或异常退出的流向(一个通道, 两个方向的流)
@@ -54,7 +58,9 @@ public class TransmitChannel {
                 int len;
                 while ((len = inputStream.read(bytes)) != -1) {
                     outputStream.write(bytes, 0, len);
-                    System.out.println(StrUtil.str(ArrayUtil.sub(bytes, 0, len), "utf-8"));
+                    if (showContent) {
+                        System.out.println(StrUtil.str(ArrayUtil.sub(bytes, 0, len), "utf-8"));
+                    }
                 }
                 exitNum.incrementAndGet();
                 canAndClose();
