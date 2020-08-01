@@ -25,11 +25,14 @@ import java.io.DataOutputStream;
 import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.net.SocketException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 /**
+ * TODO 添加ping机制, 保持tcp活性
+ *
  * @author sidian
  * @date 2020/7/31 21:34
  */
@@ -37,7 +40,7 @@ import java.util.Map;
 @Service
 public class ClientManageServiceImpl implements ClientManageService {
     /**
-     * 所有已连接的客户端
+     * 所有已连接的客户端, key为客户端id
      */
     Map<Long, ClientDo> allClients = new HashMap<>();
 
@@ -154,15 +157,18 @@ public class ClientManageServiceImpl implements ClientManageService {
                     ServerSocket serverSocket = new ServerSocket(Math.toIntExact(exposeRecord.getServerPort()));
                     // 处理请求
                     handleRequest(serverSocket, exposeRecord, client);
+                } catch (SocketException e) {
+                    log.warn("客户端可能关闭了", e);
+                    exposeRecord.setStatus(ExposeRecordStatus.exception);
                 } catch (IOException e) {
-                    log.error("监听客户端失败", e);
+                    log.error("客户端穿透端口监听失败", e);
                     exposeRecord.setStatus(ExposeRecordStatus.exception);
                 }
             });
         }
     }
 
-    private void handleRequest(ServerSocket serverSocket, ExposeRecord exposeRecord, ClientDo client) {
+    private void handleRequest(ServerSocket serverSocket, ExposeRecord exposeRecord, ClientDo client) throws SocketException {
         while (true) {
             Socket socket = null;
             try {
@@ -176,6 +182,12 @@ public class ClientManageServiceImpl implements ClientManageService {
                 outputStream.writeLong(exposeRecord.getServerPort());
                 willBuildChannels.put(exposeRecord.getServerPort(),
                         new ChannelBuilder(socket).setShowContent(appConfig.isShowContent()));
+            } catch (SocketException e) {
+                SocketUtil.close(socket);
+                SocketUtil.close(client.getSocket());
+                SocketUtil.close(serverSocket);
+                allClients.remove(client.getId());
+                throw e;
             } catch (IOException e) {
                 log.error("请求处理失败", e);
                 SocketUtil.close(socket);

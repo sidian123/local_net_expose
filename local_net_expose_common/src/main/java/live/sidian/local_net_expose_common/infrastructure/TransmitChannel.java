@@ -83,7 +83,7 @@ public class TransmitChannel {
     }
 
     public void close() {
-//        log.info("一条传输隧道被关闭");
+        log.info("一条传输隧道被关闭");
         SocketUtil.close(socket);
         SocketUtil.close(socket2);
     }
