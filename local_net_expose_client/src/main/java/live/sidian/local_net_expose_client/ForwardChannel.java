@@ -2,8 +2,8 @@ package live.sidian.local_net_expose_client;
 
 import cn.hutool.core.thread.ThreadUtil;
 import cn.hutool.core.util.ArrayUtil;
-import live.sidian.local_net_expose_common.infrastructure.ChannelInputStream;
-import live.sidian.local_net_expose_common.infrastructure.ChannelOutputStream;
+import live.sidian.local_net_expose_common.infrastructure.io.ChannelInputStream;
+import live.sidian.local_net_expose_common.infrastructure.io.ChannelOutputStream;
 import lombok.extern.slf4j.Slf4j;
 
 import java.io.IOException;
@@ -13,8 +13,8 @@ import java.net.Socket;
 import java.net.SocketException;
 import java.util.LinkedList;
 
-import static live.sidian.local_net_expose_common.infrastructure.EncoderConstant.OpConstant.CLOSE;
-import static live.sidian.local_net_expose_common.infrastructure.EncoderConstant.OpConstant.OPEN;
+import static live.sidian.local_net_expose_common.infrastructure.io.EncoderConstant.OpConstant.CLOSE;
+import static live.sidian.local_net_expose_common.infrastructure.io.EncoderConstant.OpConstant.OPEN;
 
 /**
  * 转发通道, 两个socket组成一个数据流通道.

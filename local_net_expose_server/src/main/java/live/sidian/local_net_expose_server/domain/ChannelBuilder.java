@@ -1,6 +1,7 @@
 package live.sidian.local_net_expose_server.domain;
 
 import cn.hutool.core.lang.Assert;
+import live.sidian.local_net_expose_common.infrastructure.TransmitChannel;
 import lombok.Setter;
 
 import java.io.IOException;

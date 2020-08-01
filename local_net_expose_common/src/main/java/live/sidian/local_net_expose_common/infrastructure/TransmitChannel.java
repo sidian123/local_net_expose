@@ -1,4 +1,4 @@
-package live.sidian.local_net_expose_server.domain;
+package live.sidian.local_net_expose_common.infrastructure;
 
 import cn.hutool.core.thread.ThreadUtil;
 import cn.hutool.core.util.ArrayUtil;

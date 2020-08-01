@@ -1,4 +1,4 @@
-package live.sidian.local_net_expose_common.infrastructure;
+package live.sidian.local_net_expose_common.infrastructure.io;
 
 import cn.hutool.core.util.ArrayUtil;
 import lombok.extern.slf4j.Slf4j;
@@ -7,7 +7,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.PushbackInputStream;
 
-import static live.sidian.local_net_expose_common.infrastructure.EncoderConstant.CONTROLLER;
+import static live.sidian.local_net_expose_common.infrastructure.io.EncoderConstant.CONTROLLER;
 
 /**
  * @author sidian
