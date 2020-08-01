@@ -3,7 +3,6 @@ package live.sidian.local_net_expose_server.application;
 import live.sidian.local_net_expose_server.domain.ForwardChannel;
 import live.sidian.local_net_expose_server.persistence.dao.ExposeRecordDao;
 import live.sidian.local_net_expose_server.persistence.model.ExposeRecord;
-import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
 import javax.transaction.Transactional;
@@ -13,7 +12,8 @@ import java.util.Map;
  * @author sidian
  * @date 2020/7/26 12:20
  */
-@Service
+//@Service
+@Deprecated
 @Transactional
 public class CheckService {
     @Resource

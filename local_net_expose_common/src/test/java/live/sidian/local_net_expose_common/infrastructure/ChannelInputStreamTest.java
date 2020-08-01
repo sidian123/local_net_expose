@@ -1,6 +1,7 @@
 package live.sidian.local_net_expose_common.infrastructure;
 
 import cn.hutool.core.util.ArrayUtil;
+import live.sidian.local_net_expose_common.infrastructure.io.ChannelInputStream;
 import org.junit.jupiter.api.Test;
 
 import java.io.ByteArrayInputStream;

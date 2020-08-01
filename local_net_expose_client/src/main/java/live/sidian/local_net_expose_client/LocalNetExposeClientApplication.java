@@ -1,11 +1,13 @@
 package live.sidian.local_net_expose_client;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import live.sidian.local_net_expose_client.application.ExposeClient;
+import live.sidian.local_net_expose_client.instrastructure.api.ServerApi;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.cloud.openfeign.EnableFeignClients;
 import org.springframework.context.annotation.Bean;
 import org.springframework.web.client.RestTemplate;
 
@@ -13,13 +15,13 @@ import javax.annotation.Resource;
 import java.util.Objects;
 
 @Slf4j
+@EnableFeignClients
 @SpringBootApplication
 public class LocalNetExposeClientApplication implements CommandLineRunner {
     @Resource
-    ClientTransferStation clientTransferStation;
-
-    @Value("${expose.server.url-prefix}")
-    String urlPrefix;
+    ServerApi serverApi;
+    @Resource
+    ExposeClient client;
 
 
     public static void main(String[] args) {
@@ -42,7 +44,7 @@ public class LocalNetExposeClientApplication implements CommandLineRunner {
         // 等待server启动
         waitServerStart();
         // 初始化
-//        clientTransferStation.init();
+        client.login();
         // 没主线程啥事了, 睡觉
         while (true) {
             Thread.sleep(5000);
@@ -53,11 +55,10 @@ public class LocalNetExposeClientApplication implements CommandLineRunner {
         String status = null;
         do {
             try {
-                status = restTemplate().getForObject(urlPrefix + "/server/status", String.class);
+                status = serverApi.getServerStatus();
             } catch (Exception e) {
                 log.info("等待Server正常运行, e:" + e.getMessage());
             }
-            Thread.sleep(1000);
         } while (!Objects.equals(status, "ready"));
     }
 }

@@ -1,4 +1,4 @@
-package live.sidian.local_net_expose_server.infrastructure;
+package live.sidian.local_net_expose_common.infrastructure;
 
 /**
  * @author sidian
@@ -8,7 +8,7 @@ public interface Command {
     /**
      * 与server建立连接
      */
-    int CONNECT_SERVER = 0;
+    int LOGIN = 0;
     /**
      * 与server或client构建隧道
      */
