@@ -42,9 +42,11 @@ class ChannelInputStreamTest {
         len = inputStream.read(bytes);
         assertEquals(len, -2);
 
+        assertEquals(inputStream.readOp(), 2);
+
         len = inputStream.read(bytes);
-        assertEquals(len, 6);
-        assertEquals(join(bytes, len), "23-1-145");
+        assertEquals(len, 5);
+        assertEquals(join(bytes, len), "3-1-145");
     }
 
     String join(byte[] bytes, int len) {

@@ -26,7 +26,7 @@ public class ChannelInputStream extends InputStream {
      * 读取流
      *
      * @param b 用于存储数据
-     * @return 读取的字节长度; -1表示读到了文件尾; -2 遇到命令, 接下来的第一个字节为控制字符
+     * @return 读取的字节长度; -1表示读到了文件尾; -2 遇到命令, 接下来的第一个字节为控制字符, 请用readOp读取
      */
     @Override
     public int read(byte[] b) throws IOException {
