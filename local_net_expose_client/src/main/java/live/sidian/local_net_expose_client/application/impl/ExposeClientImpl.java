@@ -122,9 +122,10 @@ public class ExposeClientImpl implements ExposeClient {
             outputStream.writeInt(Command.BUILD_CHANNEL);
             outputStream.writeLong(exposePort);
             // 与内网服务建立连接
-            Long clientPort = exposeRecordMap.get(exposePort).getClientPort();
-            log.info(String.format("与server, 内网服务%d构建隧道", clientPort));
-            localSocket = new Socket("localhost", Math.toIntExact(clientPort));
+            ExposeRecord exposeRecord = exposeRecordMap.get(exposePort);
+            log.info(String.format("在server与内网服务%s:%d之间构建隧道",
+                    exposeRecord.getLocalhost(), exposeRecord.getClientPort()));
+            localSocket = new Socket(exposeRecord.getLocalhost(), Math.toIntExact(exposeRecord.getClientPort()));
             // 建立隧道
             TransmitChannel transmitChannel = new TransmitChannel(serverSocket, localSocket);
             transmitChannel.setShowContent(appConfig.isShowContent());

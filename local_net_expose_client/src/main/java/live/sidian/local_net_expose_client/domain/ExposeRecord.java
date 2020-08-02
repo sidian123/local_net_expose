@@ -25,6 +25,11 @@ public class ExposeRecord {
     Integer status;
 
     /**
+     * 局域网内的主机
+     */
+    String localhost;
+
+    /**
      * 应用id
      */
     Long clientId;

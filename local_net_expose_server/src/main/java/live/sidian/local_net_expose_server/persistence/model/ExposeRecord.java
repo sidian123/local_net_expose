@@ -34,6 +34,11 @@ public class ExposeRecord {
     Long clientPort;
 
     /**
+     * 局域网内的主机
+     */
+    String localhost;
+
+    /**
      * 状态. 0启用, 1禁用
      */
     Integer status;
