@@ -236,7 +236,7 @@ public class ClientManageServiceImpl implements ClientManageService {
         // 补全对象
         List<ExposeRecordDo> exposeRecords = exposeRecordDao.findAllByClientId(clientId)
                 .stream()
-                .map(exposeRecord -> ExposeRecordDo.of(exposeRecord))
+                .map(ExposeRecordDo::of)
                 .collect(Collectors.toList());
         ClientDo clientDo = ClientDo.builder()
                 .socket(socket)
