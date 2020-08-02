@@ -1,6 +1,5 @@
 package live.sidian.local_net_expose_server.domain;
 
-import live.sidian.local_net_expose_server.persistence.model.ExposeRecord;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -37,5 +36,5 @@ public class ClientDo {
     /**
      * 所有穿透记录
      */
-    List<ExposeRecord> exposeRecords;
+    List<ExposeRecordDo> exposeRecords;
 }
