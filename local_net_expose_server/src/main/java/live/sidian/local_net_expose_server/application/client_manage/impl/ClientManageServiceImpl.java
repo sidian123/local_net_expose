@@ -1,15 +1,16 @@
-package live.sidian.local_net_expose_server.application.impl;
+package live.sidian.local_net_expose_server.application.client_manage.impl;
 
 import cn.hutool.core.bean.BeanUtil;
 import cn.hutool.core.thread.ThreadUtil;
 import live.sidian.local_net_expose_common.infrastructure.Command;
 import live.sidian.local_net_expose_common.util.SocketUtil;
 import live.sidian.local_net_expose_server.AppConfig;
-import live.sidian.local_net_expose_server.application.ClientManageService;
+import live.sidian.local_net_expose_server.application.client_manage.ClientManageService;
+import live.sidian.local_net_expose_server.application.client_manage.entity.ChannelBuilder;
+import live.sidian.local_net_expose_server.application.client_manage.entity.ClientDo;
+import live.sidian.local_net_expose_server.application.client_manage.entity.ExposeRecordDo;
+import live.sidian.local_net_expose_server.application.client_manage.entity.ServerStatus;
 import live.sidian.local_net_expose_server.domain.AppStatus;
-import live.sidian.local_net_expose_server.domain.ChannelBuilder;
-import live.sidian.local_net_expose_server.domain.ClientDo;
-import live.sidian.local_net_expose_server.domain.ExposeRecordDo;
 import live.sidian.local_net_expose_server.exception.ClientNotRegister;
 import live.sidian.local_net_expose_server.infrastructure.ExposeRecordStatus;
 import live.sidian.local_net_expose_server.persistence.dao.ClientDao;
@@ -61,6 +62,14 @@ public class ClientManageServiceImpl implements ClientManageService {
     ClientDao clientDao;
     @Resource
     AppConfig appConfig;
+
+    /**
+     * 获取服务端状态信息
+     */
+    @Override
+    public ServerStatus getServerStatus() {
+        return null;
+    }
 
     /**
      * 初始化连接客户端的监听器

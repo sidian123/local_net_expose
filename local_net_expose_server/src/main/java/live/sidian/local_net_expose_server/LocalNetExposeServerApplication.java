@@ -1,7 +1,7 @@
 package live.sidian.local_net_expose_server;
 
 import live.sidian.local_net_expose_common.util.SpringUtil;
-import live.sidian.local_net_expose_server.application.ClientManageService;
+import live.sidian.local_net_expose_server.application.client_manage.ClientManageService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.SpringApplication;

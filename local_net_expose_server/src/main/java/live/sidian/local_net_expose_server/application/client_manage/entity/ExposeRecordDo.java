@@ -1,4 +1,4 @@
-package live.sidian.local_net_expose_server.domain;
+package live.sidian.local_net_expose_server.application.client_manage.entity;
 
 import cn.hutool.core.bean.BeanUtil;
 import live.sidian.local_net_expose_server.persistence.model.ExposeRecord;

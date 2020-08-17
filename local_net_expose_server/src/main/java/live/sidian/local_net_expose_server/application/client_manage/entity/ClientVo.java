@@ -1,4 +1,4 @@
-package live.sidian.local_net_expose_server.domain;
+package live.sidian.local_net_expose_server.application.client_manage.entity;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -9,16 +9,14 @@ import java.net.Socket;
 import java.util.List;
 
 /**
- * 客户端
- *
  * @author sidian
- * @date 2020/7/31 21:02
+ * @date 2020/8/18 1:14
  */
 @Data
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class ClientDo {
+public class ClientVo {
     /**
      * 客户id
      */
@@ -36,5 +34,5 @@ public class ClientDo {
     /**
      * 所有穿透记录
      */
-    List<ExposeRecordDo> exposeRecords;
+    List<ExposeRecordVo> exposeRecords;
 }
